@@ -1,8 +1,13 @@
-import React from 'react'
-import { BrowserRouter as Router, Switch, Route, Redirect } from "react-router-dom";
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Redirect
+} from "react-router-dom";
 
-import EnvironmentPage from './pages/EnvironmentPage';
-import DashboardPage from './pages/DashboardPage';
+import EnvironmentPage from "./pages/EnvironmentPage";
+import DashboardPage from "./pages/DashboardPage";
 
 export default () => {
   return (
@@ -13,5 +18,5 @@ export default () => {
         <Redirect to="/" />
       </Switch>
     </Router>
-  )
-}
+  );
+};

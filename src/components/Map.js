@@ -1,15 +1,15 @@
-import React from 'react'
+import React from "react";
 
-import styled from 'styled-components'
+import styled from "styled-components";
 
-import { Map as LeafletMap, TileLayer } from 'react-leaflet'
+import { Map as LeafletMap, TileLayer } from "react-leaflet";
 
 const MapContainer = styled(LeafletMap)`
   width: 100%;
   height: 100%;
-`
+`;
 
-const Map = ({center, children}) => {
+const Map = ({ center, children }) => {
   return (
     <MapContainer center={center} zoom={13}>
       <TileLayer
@@ -18,7 +18,7 @@ const Map = ({center, children}) => {
       />
       {children}
     </MapContainer>
-  )
-}
+  );
+};
 
-export default Map
+export default Map;
