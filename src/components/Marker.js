@@ -37,7 +37,7 @@ export default ({ position, attributes }) => {
             }
 
             return (
-              <React.Fragment>
+              <React.Fragment key={attribute}>
                 <span>
                   <strong>{attribute}</strong>: <code>{value}</code>
                 </span>
