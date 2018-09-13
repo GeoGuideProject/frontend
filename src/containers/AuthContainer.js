@@ -1,6 +1,8 @@
 import React, { Component } from "react";
 import * as api from "../api";
-import AuthContainer, { AuthContext } from "../contexts/auth";
+import { AuthContext } from "../contexts/auth";
+
+import { AUTH_KEY } from "../constants";
 
 const initialState = {
   isAuthenticated: false,
@@ -8,17 +10,22 @@ const initialState = {
 };
 
 export default class AuthContainer extends Component {
-  state = {
-    ...initialState
-  };
+  constructor(props) {
+    super(props);
 
-  onLogin = ({ email, password }) => {
-    api.token({ email, password }).then(data => {
-      console.log(data);
+    const token = localStorage.getItem(AUTH_KEY);
+    this.onLogin({ accessToken: token });
 
-      api.me().then(data => {
-        console.log(data);
-      });
+    this.state = { ...initialState };
+  }
+
+  onLogin = ({ accessToken }) => {
+    localStorage.setItem(AUTH_KEY, accessToken);
+    api.me().then(({ data }) => {
+      this.setState(() => ({
+        isAuthenticated: true,
+        currentUser: data
+      }));
     });
   };
 
@@ -29,6 +36,8 @@ export default class AuthContainer extends Component {
   };
 
   render() {
+    const { isAuthenticated, currentUser } = this.state;
+
     return (
       <AuthContext.Provider
         value={{

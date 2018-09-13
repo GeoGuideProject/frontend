@@ -1,5 +1,7 @@
 import React from "react";
 
+import BaseLayout from "../layouts/BaseLayout";
+
 export default () => {
-  return <div>Dashboard</div>;
+  return <BaseLayout>Dashboard</BaseLayout>;
 };
