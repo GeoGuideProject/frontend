@@ -4,7 +4,6 @@ import styled from "styled-components";
 import { csv, median } from "d3";
 
 import Map from "../components/Map";
-import Marker from "../components/Marker";
 
 const Container = styled.div`
   width: 100vw;
@@ -44,15 +43,12 @@ export default class EnvironmentPage extends Component {
 
     return (
       <Container>
-        <Map center={center}>
-          {dataset.map(point => (
-            <Marker
-              key={point["geoguide_id"]}
-              attributes={point}
-              position={{ lat: point["latitude"], lng: point["longitude"] }}
-            />
-          ))}
-        </Map>
+        <Map
+          center={center}
+          dataset={dataset}
+          latitudeSelector={p => p.latitude}
+          longitudeSelector={p => p.longitude}
+        />
       </Container>
     );
   }
