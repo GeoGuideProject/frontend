@@ -31,3 +31,5 @@ export const register = ({ email, password, confirmPassword }) =>
     password,
     confirmPassword
   });
+
+export const datasets = () => instance.get("/api/datasets");
