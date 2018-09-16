@@ -22,11 +22,37 @@ export default class AuthContainer extends Component {
   onLogin = ({ accessToken }) => {
     localStorage.setItem(AUTH_KEY, accessToken);
     api.me().then(({ data }) => {
-      this.setState(() => ({
-        isAuthenticated: true,
-        currentUser: data
-      }));
+      this.setState(
+        () => ({
+          isAuthenticated: true,
+          currentUser: data
+        }),
+        () => {
+          this.onRefreshLater();
+        }
+      );
     });
+  };
+
+  onRefresh = () => {
+    const token = localStorage.getItem(AUTH_KEY);
+    api.tokenRefresh({ token }).then(
+      ({ data }) => {
+        localStorage.setItem(AUTH_KEY, data.accessToken);
+        this.onRefreshLater();
+      },
+      () => {
+        this.setState(() => ({
+          isAuthenticated: false
+        }));
+      }
+    );
+  };
+
+  onRefreshLater = () => {
+    setTimeout(() => {
+      this.onRefresh();
+    }, 60 * 1000);
   };
 
   onLogout = () => {

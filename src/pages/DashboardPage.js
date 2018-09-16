@@ -31,7 +31,7 @@ class DashboardPage extends React.PureComponent {
 
     return (
       <BaseLayout>
-        <h2>Dashboard</h2>
+        <h2>Datasets</h2>
 
         <CardColumns>
           {datasets.map(dataset => (
@@ -45,7 +45,7 @@ class DashboardPage extends React.PureComponent {
                     tag={Link}
                     to={`/environment/${dataset.filename.split(".")[0]}`}
                   >
-                    Open
+                    New session
                   </Button>
                   <p className="text-muted">Last used in 3 weeks</p>
                 </Footer>
