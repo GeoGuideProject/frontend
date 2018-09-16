@@ -11,6 +11,7 @@ import {
 
 import { Link } from "react-router-dom";
 import BaseLayout from "../layouts/BaseLayout";
+import { formatDistance } from "date-fns";
 
 import * as api from "../api";
 
@@ -47,7 +48,17 @@ class DashboardPage extends React.PureComponent {
                   >
                     New session
                   </Button>
-                  <p className="text-muted">Last used in 3 weeks</p>
+                  <p className="text-muted">
+                    {dataset.lastUsedAt
+                      ? `opened ${formatDistance(
+                          dataset.lastUsedAt,
+                          new Date(),
+                          {
+                            addSuffix: true
+                          }
+                        )}`
+                      : "Never opened"}
+                  </p>
                 </Footer>
               </CardBody>
             </Card>
