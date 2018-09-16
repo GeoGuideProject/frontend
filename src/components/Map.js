@@ -29,14 +29,15 @@ const Map = ({ center, dataset, latitudeSelector, longitudeSelector }) => {
           />
         </LayersControl.BaseLayer>
 
-        <LayersControl.BaseLayer name="Street" checked>
+        <LayersControl.BaseLayer name="Colorful" checked>
           <TileLayer
             attribution={`&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors`}
             url="http://{s}.tile.osm.org/{z}/{x}/{y}.png"
           />
         </LayersControl.BaseLayer>
-
-        <LayersControl.Overlay name="Heatmap">
+      </LayersControl>
+      <LayersControl>
+        <LayersControl.BaseLayer name="Heatmap">
           <FeatureGroup color="purple">
             <HeatmapLayer
               fitBoundsOnLoad
@@ -47,11 +48,11 @@ const Map = ({ center, dataset, latitudeSelector, longitudeSelector }) => {
               intensityExtractor={() => 1}
             />
           </FeatureGroup>
-        </LayersControl.Overlay>
+        </LayersControl.BaseLayer>
 
-        <LayersControl.Overlay name="Dataset" checked>
+        <LayersControl.BaseLayer name="Points" checked>
           <FeatureGroup color="purple">
-            <MarkerClusterGroup disableClusteringAtZoom={16}>
+            <MarkerClusterGroup disableClusteringAtZoom={14}>
               {dataset.map(point => (
                 <Marker
                   key={point["geoguide_id"]}
@@ -64,7 +65,7 @@ const Map = ({ center, dataset, latitudeSelector, longitudeSelector }) => {
               ))}
             </MarkerClusterGroup>
           </FeatureGroup>
-        </LayersControl.Overlay>
+        </LayersControl.BaseLayer>
       </LayersControl>
     </MapContainer>
   );
