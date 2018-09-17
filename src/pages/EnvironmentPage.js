@@ -1,8 +1,8 @@
 import React, { Component } from "react";
 import styled from "styled-components";
-
 import { csv, median } from "d3";
 
+import * as api from "../api";
 import Map from "../components/Map";
 
 const Container = styled.div`
@@ -11,7 +11,7 @@ const Container = styled.div`
 `;
 
 export default class EnvironmentPage extends Component {
-  state = { loading: true, center: {}, dataset: [] };
+  state = { loading: true, center: {}, meta: {}, dataset: [] };
 
   componentDidMount() {
     const {
@@ -20,22 +20,26 @@ export default class EnvironmentPage extends Component {
       }
     } = this.props;
 
-    csv(`http://localhost:5000/_uploads/datasets/${datasetId}.csv`).then(
-      dataset => {
-        this.setState({
-          loading: false,
-          center: {
-            lat: median(dataset, d => d["latitude"]),
-            lng: median(dataset, d => d["longitude"])
-          },
-          dataset
-        });
-      }
-    );
+    api.dataset(datasetId).then(({ data }) => {
+      console.log(data);
+      csv(`http://localhost:5000/_uploads/datasets/${data.filename}`).then(
+        dataset => {
+          this.setState({
+            meta: data,
+            loading: false,
+            center: {
+              lat: median(dataset, d => d[data.latitudeAttr]),
+              lng: median(dataset, d => d[data.longitudeAttr])
+            },
+            dataset
+          });
+        }
+      );
+    });
   }
 
   render() {
-    const { loading, center, dataset } = this.state;
+    const { loading, center, dataset, meta } = this.state;
 
     if (loading) {
       return "Loading...";
@@ -46,8 +50,8 @@ export default class EnvironmentPage extends Component {
         <Map
           center={center}
           dataset={dataset}
-          latitudeSelector={p => p.latitude}
-          longitudeSelector={p => p.longitude}
+          latitudeSelector={p => p[meta.latitudeAttr]}
+          longitudeSelector={p => p[meta.longitudeAttr]}
         />
       </Container>
     );

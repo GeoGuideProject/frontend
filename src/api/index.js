@@ -32,6 +32,8 @@ export const register = ({ email, password, confirmPassword }) =>
     confirmPassword
   });
 
+export const dataset = id => instance.get(`/api/v1/datasets/${id}`);
+
 export const datasets = () => instance.get("/api/v1/datasets");
 
 export const createDataset = ({
