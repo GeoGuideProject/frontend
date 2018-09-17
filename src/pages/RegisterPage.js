@@ -62,7 +62,7 @@ export default class RegisterPage extends React.Component {
     const { email, password, confirmPassword, error } = this.state;
 
     return (
-      <BaseLayout>
+      <BaseLayout title="Register">
         <h1>Please register</h1>
 
         {!!error ? <Alert color="danger">{error}</Alert> : null}

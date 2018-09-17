@@ -30,7 +30,7 @@ export default class Header extends Component {
         <Navbar color={"primary"} dark expand="md">
           <Container>
             <NavbarBrand tag={Link} to="/">
-              GeoGuide Environment
+              GeoGuide
             </NavbarBrand>
             <NavbarToggler onClick={this.handleToggle} />
             <Collapse isOpen={isOpen} navbar>

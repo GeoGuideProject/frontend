@@ -31,7 +31,7 @@ class DashboardPage extends React.PureComponent {
     const { datasets } = this.state;
 
     return (
-      <BaseLayout>
+      <BaseLayout title="Dashboard">
         <h2>Datasets</h2>
 
         <CardColumns>
