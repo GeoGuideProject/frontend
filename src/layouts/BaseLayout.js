@@ -7,17 +7,28 @@ import { Container } from "reactstrap";
 import Header from "../components/Header";
 
 const BaseLayout = ({ title, children }) => (
-  <div>
+  <Wrapper>
     <Helmet title={title} />
     <Header />
     <Content>
-      <Container>{children}</Container>
+      <FullContainer>{children}</FullContainer>
     </Content>
-  </div>
+  </Wrapper>
 );
 
 const Content = styled.div`
-  margin-top: 3rem;
+  margin: 3rem 0;
+  flex-grow: 1;
+`;
+
+const Wrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+`;
+
+const FullContainer = styled(Container)`
+  height: 100%;
 `;
 
 export default BaseLayout;

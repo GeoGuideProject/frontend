@@ -33,3 +33,28 @@ export const register = ({ email, password, confirmPassword }) =>
   });
 
 export const datasets = () => instance.get("/api/v1/datasets");
+
+export const createDataset = ({
+  title,
+  latitudeAttribute,
+  longitudeAttribute,
+  datetimeAttributes,
+  visibleAttributes
+}) =>
+  instance.post("api/v1/datasets", {
+    title: title,
+    latitudeAttr: latitudeAttribute,
+    longitudeAttr: longitudeAttribute,
+    datetimeAttrs: datetimeAttributes,
+    visibleAttrs: visibleAttributes
+  });
+
+export const uploadDataset = (id, datasetFile) => {
+  const formData = new FormData();
+  formData.append("dataset", datasetFile);
+  return instance.post(`/api/v1/datasets/${id}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data"
+    }
+  });
+};

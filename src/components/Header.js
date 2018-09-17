@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 
 import {
+  Button,
   Container,
   Navbar,
   NavbarBrand,
@@ -33,12 +34,17 @@ export default class Header extends Component {
               GeoGuide
             </NavbarBrand>
             <NavbarToggler onClick={this.handleToggle} />
-            <Collapse isOpen={isOpen} navbar>
-              <Nav className="ml-auto" navbar>
-                <NavItem>
-                  <AuthContext.Consumer>
-                    {({ isAuthenticated, onLogout }) =>
-                      isAuthenticated ? (
+            <AuthContext.Consumer>
+              {({ isAuthenticated, onLogout }) => (
+                <Collapse isOpen={isOpen} navbar>
+                  {isAuthenticated ? (
+                    <Button tag={Link} to="/upload" color="success">
+                      <i className="fas fa-upload" /> Upload a dataset
+                    </Button>
+                  ) : null}
+                  <Nav className="ml-auto" navbar>
+                    <NavItem>
+                      {isAuthenticated ? (
                         <NavLink href="#" onClick={() => onLogout()}>
                           Logout
                         </NavLink>
@@ -46,12 +52,12 @@ export default class Header extends Component {
                         <NavLink tag={Link} to="/login">
                           Login
                         </NavLink>
-                      )
-                    }
-                  </AuthContext.Consumer>
-                </NavItem>
-              </Nav>
-            </Collapse>
+                      )}
+                    </NavItem>
+                  </Nav>
+                </Collapse>
+              )}
+            </AuthContext.Consumer>
           </Container>
         </Navbar>
       </header>
