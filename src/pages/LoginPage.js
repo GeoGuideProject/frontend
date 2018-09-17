@@ -52,7 +52,7 @@ export default class LoginPage extends React.Component {
     const { email, password, error } = this.state;
 
     return (
-      <BaseLayout>
+      <BaseLayout title="Login">
         <h1>Please login</h1>
 
         {!!error ? <Alert color="danger">{error}</Alert> : null}

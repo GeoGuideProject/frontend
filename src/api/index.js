@@ -17,19 +17,19 @@ instance.interceptors.request.use(
   error => Promise.reject(error)
 );
 
-export const me = () => instance.get("/api/me");
+export const me = () => instance.get("/api/v1/me");
 
 export const token = ({ email, password }) =>
-  instance.post("/api/token", { email, password });
+  instance.post("/api/v1/token", { email, password });
 
 export const tokenRefresh = ({ token }) =>
-  instance.post("/api/token/refresh", { token });
+  instance.post("/api/v1/token/refresh", { token });
 
 export const register = ({ email, password, confirmPassword }) =>
-  instance.post("/api/register", {
+  instance.post("/api/v1/register", {
     email,
     password,
     confirmPassword
   });
 
-export const datasets = () => instance.get("/api/datasets");
+export const datasets = () => instance.get("/api/v1/datasets");
