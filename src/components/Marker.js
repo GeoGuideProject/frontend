@@ -9,14 +9,14 @@ const Profile = styled.div`
   padding-bottom: 1em;
 `;
 
-export default ({ position, attributes }) => {
+export default ({ position, attributes, getSize, getColor }) => {
   return (
     <CircleMarker
       center={position}
       stroke={false}
       fillOpacity={0.75}
-      radius={7}
-      fillColor="#2196F3"
+      radius={getSize(attributes)}
+      fillColor={getColor(attributes)}
     >
       <Popup>
         <h4>Profile</h4>

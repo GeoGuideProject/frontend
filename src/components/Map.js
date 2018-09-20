@@ -6,7 +6,8 @@ import {
   Map as LeafletMap,
   TileLayer,
   LayersControl,
-  FeatureGroup
+  FeatureGroup,
+  ZoomControl
 } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-markercluster";
 import HeatmapLayer from "react-leaflet-heatmap-layer";
@@ -18,13 +19,21 @@ const MapContainer = styled(LeafletMap)`
   height: 100%;
 `;
 
-const Map = ({ center, dataset, latitudeSelector, longitudeSelector }) => {
+const Map = ({
+  center,
+  dataset,
+  latitudeSelector,
+  longitudeSelector,
+  getColor,
+  getSize
+}) => {
   return (
-    <MapContainer center={center} zoom={13} maxZoom={18}>
+    <MapContainer center={center} zoom={13} maxZoom={18} zoomControl={false}>
+      <ZoomControl position={"bottomright"} />
       <LayersControl>
         <LayersControl.BaseLayer name="Grayscale">
           <TileLayer
-            attribution="&copy; <a href=&quot;http://osm.org/copyright&quot;>OpenStreetMap</a> contributors"
+            attribution={`&copy; <a href="http://osm.org/copyright";>OpenStreetMap</a> contributors`}
             url="https://tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png"
           />
         </LayersControl.BaseLayer>
@@ -52,18 +61,25 @@ const Map = ({ center, dataset, latitudeSelector, longitudeSelector }) => {
 
         <LayersControl.BaseLayer name="Points" checked>
           <FeatureGroup color="purple">
-            <MarkerClusterGroup disableClusteringAtZoom={14}>
-              {dataset.map(point => (
+            {/* <MarkerClusterGroup disableClusteringAtZoom={14}> */}
+            {dataset.map(point => {
+              const lat = latitudeSelector(point);
+              const lng = longitudeSelector(point);
+
+              return (
                 <Marker
                   key={point["geoguide_id"]}
+                  getSize={getSize}
+                  getColor={getColor}
                   attributes={point}
                   position={{
-                    lat: latitudeSelector(point),
-                    lng: longitudeSelector(point)
+                    lat,
+                    lng
                   }}
                 />
-              ))}
-            </MarkerClusterGroup>
+              );
+            })}
+            {/* </MarkerClusterGroup> */}
           </FeatureGroup>
         </LayersControl.BaseLayer>
       </LayersControl>
