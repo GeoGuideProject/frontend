@@ -1,19 +1,13 @@
 import React, { Component } from "react";
 import styled from "styled-components";
 import { csv, median, max } from "d3";
-import {
-  XYPlot,
-  VerticalBarSeries,
-  VerticalGridLines,
-  HorizontalGridLines,
-  XAxis,
-  YAxis,
-  Highlight
-} from "react-vis";
+import * as crossfilter from "crossfilter2";
 
 import * as api from "../../api";
 import Map from "../../components/Map";
 import { MenuControl } from "../../components/Controls";
+
+import Filter from "./Filter";
 
 import "react-vis/dist/style.css";
 
@@ -42,18 +36,6 @@ export default class EnvironmentPage extends Component {
     meta: {},
     dataset: [],
     filters: {}
-  };
-
-  handleFilterSelection = key => area => {
-    this.setState(({ filters }) => ({
-      filters: {
-        ...filters,
-        [key]: {
-          selectionStart: area && area.left,
-          selectionEnd: area && area.right
-        }
-      }
-    }));
   };
 
   handleChange = key => event => {
@@ -119,83 +101,11 @@ export default class EnvironmentPage extends Component {
               lat: median(dataset, d => d[data.latitudeAttr]),
               lng: median(dataset, d => d[data.longitudeAttr])
             },
-            dataset
+            dataset: crossfilter(dataset)
           });
         }
       );
     });
-  }
-
-  renderFilter({ description: attribute }) {
-    const { dataset, filters } = this.state;
-
-    const aggregation = dataset.reduce((aggr, curr) => {
-      const x = Number(curr[attribute]);
-
-      if (Number.isNaN(x)) {
-        return aggr;
-      }
-
-      return {
-        ...aggr,
-        [x]: 1 + (aggr[x] || 0)
-      };
-    }, {});
-
-    const data = Object.keys(aggregation)
-      .map(key => {
-        const x = Number(key);
-
-        return {
-          x,
-          y: aggregation[x]
-        };
-      })
-      .filter(Boolean);
-
-    return (
-      <div key={attribute}>
-        <h6>
-          <code>{attribute}</code>
-        </h6>
-
-        <XYPlot height={300} width={300}>
-          <VerticalGridLines />
-          <HorizontalGridLines />
-          <XAxis />
-          <YAxis />
-          <VerticalBarSeries
-            data={data}
-            colorType="literal"
-            getColor={d => {
-              if (!filters[attribute]) {
-                return "#1E96BE";
-              }
-
-              const { selectionStart, selectionEnd } = filters[attribute];
-
-              if (selectionStart === null || selectionEnd === null) {
-                return "#1E96BE";
-              }
-
-              const inX = d.x >= selectionStart && d.x <= selectionEnd;
-              const inX0 = d.x0 >= selectionStart && d.x0 <= selectionEnd;
-              const inStart = selectionStart >= d.x0 && selectionStart <= d.x;
-              const inEnd = selectionEnd >= d.x0 && selectionEnd <= d.x;
-
-              return inStart || inEnd || inX || inX0 ? "#12939A" : "#1E96BE";
-            }}
-          />
-          <Highlight
-            color="#829AE3"
-            drag
-            enableY={false}
-            onDrag={this.handleFilterSelection(attribute)}
-            onDragEnd={this.handleFilterSelection(attribute)}
-          />
-        </XYPlot>
-      </div>
-    );
   }
 
   render() {
@@ -217,7 +127,13 @@ export default class EnvironmentPage extends Component {
     return (
       <Wrapper>
         <FilterContainer>
-          {numericAttributes.map(attr => this.renderFilter(attr))}
+          {numericAttributes.slice(0, 2).map(attr => (
+            <Filter
+              key={attr.description}
+              dataset={dataset}
+              attribute={attr.description}
+            />
+          ))}
         </FilterContainer>
         <MapContainer>
           <MenuControl
@@ -232,7 +148,7 @@ export default class EnvironmentPage extends Component {
         /> */}
           <Map
             center={center}
-            dataset={dataset}
+            dataset={dataset.allFiltered()}
             getColor={this.getColor}
             getSize={this.getSize}
             latitudeSelector={p => p[meta.latitudeAttr]}
