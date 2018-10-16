@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { scaleLinear, max, min } from "d3";
+import debounce from "lodash.debounce";
 import {
   XYPlot,
   VerticalBarSeries,
@@ -14,106 +15,133 @@ export default class Filter extends Component {
   constructor(props) {
     super(props);
 
-    const { dataset, attribute } = this.props;
+    const { dataset, attributes } = this.props;
 
-    const dimension = dataset.dimension(d => Number(d[attribute]));
+    const data = {};
+    const dimension = {};
+    const selection = {};
     const allData = dataset.all();
 
-    const dataMax = max(allData, d => Number(d[attribute]));
-    const dataMin = min(allData, d => Number(d[attribute]));
+    attributes.forEach(attribute => {
+      dimension[attribute] = dataset.dimension(d => Number(d[attribute]));
 
-    const group = dimension.group();
+      console.log(dimension[attribute].top(5));
 
-    const scaleX = scaleLinear()
-      .domain([dataMin - dataMin / 10, dataMax + dataMax / 10])
-      .rangeRound([0, 275]);
-    const scaleY = scaleLinear()
-      .domain([0, group.top(1)[0].value])
-      .range([0, 100]);
+      const dataMax = max(allData, d => Number(d[attribute]));
+      const dataMin = min(allData, d => Number(d[attribute]));
 
-    const data = group.all().map(d => ({
-      x: scaleX(d.key),
-      y: scaleY(d.value)
-    }));
+      const group = dimension[attribute].group();
+
+      const scaleX = scaleLinear()
+        .domain([dataMin - dataMin / 10, dataMax + dataMax / 10])
+        .rangeRound([0, 275]);
+
+      const scaleY = scaleLinear()
+        .domain([0, group.top(1)[0].value])
+        .rangeRound([0, 100]);
+
+      data[attribute] = group.all().map(d => ({
+        x: scaleX(d.key),
+        y: scaleY(d.value)
+      }));
+    });
+
+    console.log(data);
 
     this.state = {
-      selectionStart: null,
-      selectionEnd: null,
+      selection,
       dimension,
       data
     };
   }
 
-  handleFilterSelection = area => {
-    this.setState(
-      ({ dimension: prevDimension }) => {
-        const selectionStart = area ? area.left : null;
-        const selectionEnd = area ? area.right : null;
-
-        if (selectionStart === null || selectionEnd === null) {
-          return {
-            selectionStart,
-            selectionEnd,
-            dimension: prevDimension.filterAll()
-          };
-        }
+  handleFilterSelection = attribute =>
+    debounce(area => {
+      const { onFilter } = this.props;
+      this.setState(({ dimension, selection }) => {
+        const start = area ? area.left : null;
+        const end = area ? area.right : null;
+        const prevDimension = dimension[attribute];
 
         return {
-          selectionStart,
-          selectionEnd,
-          dimension: prevDimension.filter([selectionStart, selectionEnd])
+          selection: {
+            ...selection,
+            [attribute]: {
+              start,
+              end
+            }
+          },
+          dimension: {
+            ...dimension,
+            [attribute]:
+              start === null || end === null
+                ? dimension[attribute].filterAll()
+                : prevDimension.filter([start, end])
+          }
         };
-      },
-      () => {
-        console.log(this.state.dimension.top(Infinity));
-      }
-    );
-  };
+      }, onFilter);
+    }, 300);
 
   componentWillUnmount = () => {
-    this.state.dimension.dispose();
+    const { dimension } = this.state;
+    Object.keys(dimension).forEach(attribute => dimension[attribute].dispose());
   };
 
   render = () => {
-    const { attribute } = this.props;
-    const { selectionStart, selectionEnd, data } = this.state;
+    const { attributes } = this.props;
+    const { selection, data } = this.state;
 
     return (
-      <div>
-        <h6>
-          <code>{attribute}</code>
-        </h6>
+      <React.Fragment>
+        {attributes.map((attribute, index) => {
+          const { start, end } = selection[attribute] || {
+            start: null,
+            end: null
+          };
 
-        <XYPlot height={300} width={300}>
-          <VerticalGridLines />
-          <HorizontalGridLines />
-          <XAxis />
-          <YAxis />
-          <VerticalBarSeries
-            data={data}
-            colorType="literal"
-            getColor={d => {
-              if (selectionStart === null || selectionEnd === null) {
-                return "#1E96BE";
-              }
+          const handleSelection = this.handleFilterSelection(attribute);
 
-              const inX = d.x >= selectionStart && d.x <= selectionEnd;
-              const inX0 = d.x0 >= selectionStart && d.x0 <= selectionEnd;
-              const inStart = selectionStart >= d.x0 && selectionStart <= d.x;
-              const inEnd = selectionEnd >= d.x0 && selectionEnd <= d.x;
+          return (
+            <div key={index}>
+              <h6>
+                <code>{attribute}</code>
+              </h6>
 
-              return inStart || inEnd || inX || inX0 ? "#12939A" : "#1E96BE";
-            }}
-          />
-          <Highlight
-            color="#829AE3"
-            drag
-            enableY={false}
-            onDrag={this.handleFilterSelection}
-            onDragEnd={this.handleFilterSelection}
-          />
-        </XYPlot>
-      </div>
+              <XYPlot height={300} width={300}>
+                <VerticalGridLines />
+                <HorizontalGridLines />
+                <XAxis />
+                <YAxis />
+                <VerticalBarSeries
+                  data={data[attribute]}
+                  colorType="literal"
+                  getColor={d => {
+                    if (start === null || end === null) {
+                      return "#1E96BE";
+                    }
+
+                    const inX = d.x >= start && d.x <= end;
+                    const inX0 = d.x0 >= start && d.x0 <= end;
+                    const inStart = start >= d.x0 && start <= d.x;
+                    const inEnd = end >= d.x0 && end <= d.x;
+
+                    return inStart || inEnd || inX || inX0
+                      ? "#12939A"
+                      : "#1E96BE";
+                  }}
+                />
+                <Highlight
+                  color="#829AE3"
+                  drag
+                  enableY={false}
+                  onDrag={handleSelection}
+                  onDragEnd={handleSelection}
+                />
+              </XYPlot>
+            </div>
+          );
+        })}
+      </React.Fragment>
     );
   };
 }

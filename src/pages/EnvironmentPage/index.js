@@ -38,10 +38,16 @@ export default class EnvironmentPage extends Component {
     filters: {}
   };
 
+  handleFilter = () => {
+    this.setState(({ dataset }) => ({
+      data: dataset.allFiltered()
+    }));
+  };
+
   handleChange = key => event => {
-    const { dataset } = this.state;
+    const { data } = this.state;
     const { value } = event.target;
-    const maxValue = max(dataset, d => {
+    const maxValue = max(data, d => {
       const n = Number(d[value]);
       return n + 2 * Math.abs(n);
     });
@@ -94,6 +100,8 @@ export default class EnvironmentPage extends Component {
     api.dataset(datasetId).then(({ data }) => {
       csv(`http://localhost:5000/_uploads/datasets/${data.filename}`).then(
         dataset => {
+          const cf = crossfilter(dataset);
+
           this.setState({
             meta: data,
             loading: false,
@@ -101,11 +109,19 @@ export default class EnvironmentPage extends Component {
               lat: median(dataset, d => d[data.latitudeAttr]),
               lng: median(dataset, d => d[data.longitudeAttr])
             },
-            dataset: crossfilter(dataset)
+            dataset: cf,
+            data: cf.allFiltered()
           });
         }
       );
     });
+  }
+
+  componentWillUnmount() {
+    const { dataset } = this.state;
+    if (!!dataset) {
+      dataset.remove();
+    }
   }
 
   render() {
@@ -113,6 +129,7 @@ export default class EnvironmentPage extends Component {
       loading,
       center,
       dataset,
+      data,
       meta,
       colorModifier,
       sizeModifier
@@ -127,13 +144,13 @@ export default class EnvironmentPage extends Component {
     return (
       <Wrapper>
         <FilterContainer>
-          {numericAttributes.slice(0, 2).map(attr => (
-            <Filter
-              key={attr.description}
-              dataset={dataset}
-              attribute={attr.description}
-            />
-          ))}
+          <Filter
+            onFilter={this.handleFilter}
+            dataset={dataset}
+            attributes={numericAttributes
+              .slice(0, 2)
+              .map(attr => attr.description)}
+          />
         </FilterContainer>
         <MapContainer>
           <MenuControl
@@ -148,7 +165,7 @@ export default class EnvironmentPage extends Component {
         /> */}
           <Map
             center={center}
-            dataset={dataset.allFiltered()}
+            dataset={data}
             getColor={this.getColor}
             getSize={this.getSize}
             latitudeSelector={p => p[meta.latitudeAttr]}
