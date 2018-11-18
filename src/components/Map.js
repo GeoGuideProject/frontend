@@ -28,7 +28,13 @@ const Map = ({
   getSize
 }) => {
   return (
-    <MapContainer center={center} zoom={13} maxZoom={18} zoomControl={false}>
+    <MapContainer
+      center={center}
+      zoom={13}
+      maxZoom={18}
+      zoomControl={false}
+      useFlyTo={false}
+    >
       <ZoomControl position={"bottomright"} />
       <LayersControl>
         <LayersControl.BaseLayer name="Grayscale">

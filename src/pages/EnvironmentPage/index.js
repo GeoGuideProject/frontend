@@ -1,17 +1,17 @@
 import React, { Component } from "react";
 import styled from "styled-components";
 import { csv, median, max } from "d3";
+import * as crossfilter from "crossfilter2";
 
-import * as api from "../api";
-import Map from "../components/Map";
-import MenuControl from "../components/MenuControl";
+import * as api from "../../api";
+import Map from "../../components/Map";
+import { MenuControl } from "../../components/Controls";
 
-const Container = styled.div`
-  width: 100vw;
-  height: 100vh;
-`;
+import Filter from "./Filter";
 
-const normalfillColor = "#2196F3";
+import "react-vis/dist/style.css";
+
+const normalFillColor = "#2196F3";
 const normalFillColors = [
   "#e3f2fd",
   "#bbdefb",
@@ -34,13 +34,20 @@ export default class EnvironmentPage extends Component {
     menu: false,
     center: {},
     meta: {},
-    dataset: []
+    dataset: [],
+    filters: {}
+  };
+
+  handleFilter = () => {
+    this.setState(({ dataset }) => ({
+      data: dataset.allFiltered()
+    }));
   };
 
   handleChange = key => event => {
-    const { dataset } = this.state;
+    const { data } = this.state;
     const { value } = event.target;
-    const maxValue = max(dataset, d => {
+    const maxValue = max(data, d => {
       const n = Number(d[value]);
       return n + 2 * Math.abs(n);
     });
@@ -57,7 +64,7 @@ export default class EnvironmentPage extends Component {
     const { colorModifier, maxValues } = this.state;
 
     if (colorModifier === "") {
-      return normalfillColor;
+      return normalFillColor;
     }
 
     let n = Number(attributes[colorModifier]);
@@ -93,6 +100,8 @@ export default class EnvironmentPage extends Component {
     api.dataset(datasetId).then(({ data }) => {
       csv(`http://localhost:5000/_uploads/datasets/${data.filename}`).then(
         dataset => {
+          const cf = crossfilter(dataset);
+
           this.setState({
             meta: data,
             loading: false,
@@ -100,11 +109,19 @@ export default class EnvironmentPage extends Component {
               lat: median(dataset, d => d[data.latitudeAttr]),
               lng: median(dataset, d => d[data.longitudeAttr])
             },
-            dataset
+            dataset: cf,
+            data: cf.allFiltered()
           });
         }
       );
     });
+  }
+
+  componentWillUnmount() {
+    const { dataset } = this.state;
+    if (!!dataset) {
+      dataset.remove();
+    }
   }
 
   render() {
@@ -112,6 +129,7 @@ export default class EnvironmentPage extends Component {
       loading,
       center,
       dataset,
+      data,
       meta,
       colorModifier,
       sizeModifier
@@ -121,24 +139,56 @@ export default class EnvironmentPage extends Component {
       return "Loading...";
     }
 
+    const numericAttributes = meta.attributes.filter(a => a.type === "number");
+
     return (
-      <Container>
-        <MenuControl
+      <Wrapper>
+        <FilterContainer>
+          <Filter
+            onFilter={this.handleFilter}
+            dataset={dataset}
+            attributes={numericAttributes
+              .slice(0, 2)
+              .map(attr => attr.description)}
+          />
+        </FilterContainer>
+        <MapContainer>
+          <MenuControl
+            attributes={numericAttributes}
+            currentColor={colorModifier}
+            onColorChange={this.handleChange("colorModifier")}
+            currentSize={sizeModifier}
+            onSizeChange={this.handleChange("sizeModifier")}
+          />
+          {/* <FilterControl
           attributes={meta.attributes.filter(a => a.type === "number")}
-          currentColor={colorModifier}
-          onColorChange={this.handleChange("colorModifier")}
-          currentSize={sizeModifier}
-          onSizeChange={this.handleChange("sizeModifier")}
-        />
-        <Map
-          center={center}
-          dataset={dataset}
-          getColor={this.getColor}
-          getSize={this.getSize}
-          latitudeSelector={p => p[meta.latitudeAttr]}
-          longitudeSelector={p => p[meta.longitudeAttr]}
-        />
-      </Container>
+        /> */}
+          <Map
+            center={center}
+            dataset={data}
+            getColor={this.getColor}
+            getSize={this.getSize}
+            latitudeSelector={p => p[meta.latitudeAttr]}
+            longitudeSelector={p => p[meta.longitudeAttr]}
+          />
+        </MapContainer>
+      </Wrapper>
     );
   }
 }
+
+const Wrapper = styled.div`
+  display: flex;
+`;
+
+const FilterContainer = styled.div`
+  width: 20vw;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 1rem;
+`;
+
+const MapContainer = styled.div`
+  flex-grow: 1;
+  height: 100vh;
+`;
